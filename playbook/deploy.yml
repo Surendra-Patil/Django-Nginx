@@ -1,0 +1,96 @@
+- hosts: 158.144.43.4
+  tasks:
+    - name: Clone github repository
+      git:
+        repo: https://github.com/Surendra-Patil/Django-Nginx.git
+        dest: /home/glab/Desktop/Django-Nginx
+        version: testing
+
+    - name: Build NGINX Image
+      docker_image:
+        build:
+          path: /home/glab/Desktop/Django-Nginx/nginx
+        name: nginx_surendra
+        source: build
+
+    - name: Build Django Image
+      docker_image:
+        build:
+          path: /home/glab/Desktop/Django-Nginx/app
+          dockerfile: Dockerfile.prod
+        name: django
+        source: build
+
+    - name: Pull Postgres Image
+      docker_image:
+        name: postgres:12.0-alpine
+
+    - name: Postgres Volume
+      docker_volume:
+        name: db_data
+
+    - name: Start postgres Container
+      docker_container:
+        name: db
+        image: postgres:12.0-alpine
+        state: started
+        tty: true
+        detach: true
+        restart: yes
+        volumes:
+          - "db_data:/var/lib/postgresql/data/:rw"
+        env:
+          POSTGRES_USER=hello_django
+          POSTGRES_PASSWORD=hello_django
+          POSTGRES_DB=hello_django_prod
+
+    - name: Static File Volume
+      docker_volume:
+        name: static_volume
+
+    - name: Media File Volume
+      docker_volume:
+        name: media_volume
+
+    - name: Start Django Container
+      docker_container:
+        name: web
+        image: django
+        volumes:
+          - "static_volume:/home/app/web/staticfiles:rw"
+          - "media_volume:/home/app/web/mediafiles:rw"
+        env:
+          DEBUG=0
+          SECRET_KEY=change_me
+          DJANGO_ALLOWED_HOSTS="localhost 127.0.0.1 [::1] surendra.com"
+          SQL_ENGINE=django.db.backends.postgresql
+          SQL_DATABASE=hello_django_prod
+          SQL_USER=hello_django
+          SQL_PASSWORD=hello_django
+          SQL_HOST=db
+          SQL_PORT=5432
+          DATABASE=postgres
+        expose:
+          - 8000
+        links:
+          - "db:db"
+        state: started
+        tty: true
+        detach: true
+        command: gunicorn hello_django.wsgi:application --bind 0.0.0.0:8000
+
+    - name: Start Nginx Container
+      docker_container:
+        name: nginx      
+        image: nginx_surendra
+        volumes:
+          - "static_volume:/home/app/web/staticfiles:rw"
+          - "media_volume:/home/app/web/mediafiles:rw"
+        ports:
+          - "80:80"
+          - "443:443"
+        state: started
+        tty: true
+        detach: true
+        links:
+          - "web:web"
