@@ -1,7 +1,7 @@
 # Django-Nginx
 
 ## Deployment using ansible
-Navigate to playbook directory and run command "ansible-playbook deploy.yml"
+Navigate to playbook directory, edit the hosts IP in deploy.yml file and run command "ansible-playbook deploy.yml"
 
 ## Deployment using docker-compose
 1) docker-compose -f docker-compose.yml up -d --build
