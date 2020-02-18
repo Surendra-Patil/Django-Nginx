@@ -94,3 +94,9 @@
         detach: true
         links:
           - "web:web"
+
+    - name: Migrate 
+      command: docker exec -it web /bin/sh -c 'python manage.py migrate --noinput'
+
+    - name: Collect Static
+      command: docker exec -it web /bin/sh -c 'python manage.py collectstatic --no-input --clear'
