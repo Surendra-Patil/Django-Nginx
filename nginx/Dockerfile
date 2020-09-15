@@ -5,4 +5,4 @@ RUN rm /etc/nginx/conf.d/default.conf
 COPY nginx.conf /etc/nginx/conf.d
 COPY ssl.sh /
 RUN /bin/bash /ssl.sh
-RUN openssl dhparam -out /etc/ssl/surendra.com.dhparam.pem 2048
+RUN openssl dhparam -out /etc/ssl/example.com.dhparam.pem 2048
